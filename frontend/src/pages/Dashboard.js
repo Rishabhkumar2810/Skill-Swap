@@ -3,6 +3,8 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Matches from "../components/Matches";
 
+const API = process.env.REACT_APP_API_URL;
+
 function Dashboard() {
   const navigate = useNavigate();
   const [skillsOffered, setSkillsOffered] = useState("");
@@ -25,7 +27,7 @@ function Dashboard() {
       const token = localStorage.getItem("token");
 
       const res = await axios.put(
-        "http://localhost:5000/api/user/skills",
+        `${API}/api/user/skills`,   // ✅ FIXED (no localhost)
         {
           skillsOffered: skillsOffered.split(",").map((s) => s.trim()),
           skillsWanted: skillsWanted.split(",").map((s) => s.trim()),

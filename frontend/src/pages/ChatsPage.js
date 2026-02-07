@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5000");
+// ✅ use environment variable instead of localhost
+const API = process.env.REACT_APP_API_URL;
+const socket = io(API);
 
 function ChatsPage() {
   const user = JSON.parse(localStorage.getItem("user"));
@@ -15,21 +17,22 @@ function ChatsPage() {
 
   const bottomRef = useRef(null);
 
-  // 🔹 Load matches (chat list)
+  // 🔹 Load matches
   useEffect(() => {
     axios
-      .get("http://localhost:5000/api/match", {
+      .get(`${API}/api/match`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((res) => setMatches(res.data))
       .catch(() => console.log("Failed to load matches"));
   }, [token]);
 
-  // 🔹 Join room + listen for messages
+  // 🔹 Join room + listen messages
   useEffect(() => {
     if (!activeChat) return;
 
     const roomId = activeChat.roomId;
+
     socket.emit("joinRoom", roomId);
 
     socket.on("receiveMessage", (msg) => {
@@ -41,7 +44,7 @@ function ChatsPage() {
     return () => socket.off("receiveMessage");
   }, [activeChat]);
 
-  // 🔹 Auto-scroll
+  // 🔹 Auto scroll
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -74,12 +77,13 @@ function ChatsPage() {
               key={m.userId}
               onClick={async () => {
                 const roomId = [user.id, m.userId].sort().join("-");
+
                 setActiveChat({ ...m, roomId });
                 setMessages([]);
 
                 try {
                   const res = await axios.get(
-                    `http://localhost:5000/api/messages/${roomId}`,
+                    `${API}/api/messages/${roomId}`,
                     {
                       headers: { Authorization: `Bearer ${token}` },
                     }
